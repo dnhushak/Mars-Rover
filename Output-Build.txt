@@ -1,0 +1,42 @@
+﻿------ Build started: Project: rover, Configuration: Debug AVR ------
+Build started.
+Project "rover.cproj" (default targets):
+Target "PreBuildEvent" skipped, due to false condition; ('$(PreBuildEvent)'!='') was evaluated as (''!='').
+Target "CoreBuild" in file "C:\Program Files (x86)\Atmel\Atmel Studio 6.0\Vs\Compiler.targets" from project "U:\cpre288\rover\rover\rover\rover.cproj" (target "Build" depends on it):
+	Task "RunCompilerTask"
+		C:\Program Files (x86)\Atmel\Atmel Studio 6.0\make\make.exe all 
+		Building file: .././util.c
+		Invoking: AVR/GNU C Compiler : (AVR_8_bit_GNU_Toolchain_3.4.0_663) 4.6.2
+		"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.0.65\AVRToolchain\bin\avr-gcc.exe" -funsigned-char -funsigned-bitfields -O1 -fpack-struct -fshort-enums -g2 -Wall -c -std=gnu99 -MD -MP -MF "util.d" -MT"util.d" -MT"util.o"  -mmcu=atmega128   -o"util.o" ".././util.c" 
+		.././util.c: In function 'serial_putstr':
+U:\cpre288\rover\rover\rover\util.c(427,2): implicit declaration of function 'strlen' [-Wimplicit-function-declaration]
+U:\cpre288\rover\rover\rover\util.c(427,12): incompatible implicit declaration of built-in function 'strlen' [enabled by default]
+		.././util.c: In function 'playsong':
+U:\cpre288\rover\rover\rover\util.c(709,2): pointer targets in passing argument 3 of 'oi_load_song' differ in signedness [-Wpointer-sign]
+U:\cpre288\rover\rover\rover\open_interface.h(194,6): expected 'unsigned char *' but argument is of type 'char *'
+U:\cpre288\rover\rover\rover\util.c(709,2): pointer targets in passing argument 4 of 'oi_load_song' differ in signedness [-Wpointer-sign]
+U:\cpre288\rover\rover\rover\open_interface.h(194,6): expected 'unsigned char *' but argument is of type 'char *'
+		Finished building: .././util.c
+		Building target: rover.elf
+		Invoking: AVR/GNU Linker : (AVR_8_bit_GNU_Toolchain_3.4.0_663) 4.6.2
+		"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.0.65\AVRToolchain\bin\avr-gcc.exe" -o rover.elf  lcd.o open_interface.o rover.o util.o   -Wl,-Map="rover.map" -Wl,--start-group -Wl,-lm  -Wl,--end-group  -mmcu=atmega128  
+		Finished building target: rover.elf
+		"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.0.65\AVRToolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature  "rover.elf" "rover.hex"
+		"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.0.65\AVRToolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "rover.elf" "rover.eep" || exit 0
+		"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.0.65\AVRToolchain\bin\avr-objdump.exe" -h -S "rover.elf" > "rover.lss"
+		"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.0.65\AVRToolchain\bin\avr-size.exe" "rover.elf"
+		   text	   data	    bss	    dec	    hex	filename
+		   9380	    150	    117	   9647	   25af	rover.elf
+	Done executing task "RunCompilerTask".
+	Task "RunOutputFileVerifyTask"
+				Program Memory Usage 	:	9530 bytes   7.3 % Full
+				Data Memory Usage 		:	267 bytes   0.4 % Full
+	Done executing task "RunOutputFileVerifyTask".
+Done building target "CoreBuild" in project "rover.cproj".
+Target "PostBuildEvent" skipped, due to false condition; ('$(PostBuildEvent)' != '') was evaluated as ('' != '').
+Target "Build" in file "C:\Program Files (x86)\Atmel\Atmel Studio 6.0\Vs\Avr.common.targets" from project "U:\cpre288\rover\rover\rover\rover.cproj" (entry point):
+Done building target "Build" in project "rover.cproj".
+Done building project "rover.cproj".
+
+Build succeeded.
+========== Build: 1 succeeded or up-to-date, 0 failed, 0 skipped ==========
