@@ -1,9 +1,8 @@
-/*
- * rover.c
- *
- * Created: 4/19/2013 4:43:59 PM
- *  Author: dnhushak
- */ 
+//@author Travis Reed
+//@author Joe Meis
+//@author Aaron Zatorski
+//@author Dan Rust
+//@author Darren Hushak
 
 #include <avr/io.h>
 #include <stdio.h>
@@ -17,6 +16,10 @@
 
 int rcv[10];
 	
+///Main function
+/** 
+* Initializes all sensors, external items used, etc. Continually waits for serial input, parses input, and then completes command based on that input
+*/
 
 int main(void)
 {
@@ -44,7 +47,6 @@ int main(void)
 		irdist = ir_read(2);
 		lprintf("PING: %d\nIR  : %d\nAVE : %d",pingdist,irdist,(pingdist+irdist)/2);
 	}*/
-	//scan();
 	
 	while(1){
 		
@@ -149,7 +151,10 @@ int main(void)
 	}
 }
 
-// Waits for new line or ten characters to be entered 
+/// Receive a line of command via the serial port
+/**
+* Waits for new line or ten characters to be entered 
+*/
 void serial_getline(){
 	
 	//String index initialization

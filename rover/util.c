@@ -1,3 +1,10 @@
+//@author Travis Reed
+//@author Joe Meis
+//@author Aaron Zatorski
+//@author Dan Rust
+//@author Darren Hushak
+
+
 #include <avr/io.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +21,10 @@ void timer2_stop();
 
 
 /// Blocks for a specified number of milliseconds
+/**
+* Uses a prescaled timer to calculate milliseconds
+* @param time_val an integer representing how many milliseconds to wait
+*/
 void wait_ms(unsigned int time_val) {
 	//Seting OC value for time requested
 	OCR2=250; 				//Clock is 16 MHz. At a prescaler of 64, 250 timer ticks = 1ms.
@@ -26,7 +37,11 @@ void wait_ms(unsigned int time_val) {
 	timer2_stop();
 }
 
-// Start timer2
+/// Start timer2
+/**
+* Initializes timer2, used for the wait_ms function
+* @param unit 0 for slow, 1 for fast
+*/
 void timer2_start(char unit){
 	timer2_tick=0;
 	if ( unit == 0 ) { 		//unit = 0 is for slow 
@@ -40,20 +55,20 @@ void timer2_start(char unit){
 	sei();
 }
 
-// Stop timer2
+/// Stop timer2
 void timer2_stop() {
 	TIMSK&=~0b10000000;		//Disabling O.C. Interrupt for Timer2
 	TCCR2&=0b01111111;		//Clearing O.C. settings
 }
 
 
-// Interrupt handler (runs every 1 ms)
+/// Interrupt handler
+/**
+* Runs every 1 ms and increments the timer counter
+*/
 ISR (TIMER2_COMP_vect) {
 	timer2_tick++;
 }
-
-
-
 
 //Push Buttons and Shaft Encoder
 
@@ -190,13 +205,14 @@ volatile unsigned falling_time; // end time of the return pulse
 volatile int overflow=0; //Overflow Counter
 volatile int state; //Ping state - 0 is LOW, 1 is HIGH, 2 is DONE
 
-//Timer Overflow Counter
+///Timer 1 Overflow Counter
 ISR (TIMER1_OVF_vect)
 {
 	//Overflow events
 	overflow++;
 }
 
+///Timer 1 captures a rising edge
 ISR (TIMER1_CAPT_vect)
 {
 	//If in low state, then set to high state and set ICES to read
@@ -218,7 +234,10 @@ ISR (TIMER1_CAPT_vect)
 	}
 }
 
-//Initialize Sonar
+///Initialize Sonar
+/**
+* Enables timer 1 and timer 1's event interrupt, set 'state' to low
+*/
 void sonar_init()
 {
 	// enable Timer1 and interrupt
@@ -230,7 +249,10 @@ void sonar_init()
 	state=0;
 }
 
-//Send a pulse on the Sonar
+///Send a pulse on the Sonar
+/**
+* Set Pin D to output, send a pulse, wait a millisecond, set the pulse to low, then set PD4 to input, then wait for event interrupt
+*/
 void pulse()
 {
 	DDRD	|=	0x10; // set PD4 as output
@@ -241,15 +263,24 @@ void pulse()
 	DDRD	&=	~0x10; // set PD4 as input
 }
 
-//Distance Calculator
+///Distance Calculator
+/**
+* Calculates distance from time (34,000 cm/seconds = 34 cm/ microsecond, divided by 16 because the prescalar of 1024 causes the timer to increment every 1/15625 of a second
+* We're trying to get microseconds, so divide that 15625 by 1000, so the timer increments every 1/15.6 of a microsecond, which is close to 16, so divide by 16. For some unexplained reason, I had to divide by 2 to get calibration correct.
+* @param time Time in an integer value from the ping sensor (from rising edge to falling edge) - represents timer ticks
+* @return distance in centimeters
+*/
 unsigned distancecalc(int time)
 {
-	//Calculates distance from time (34,000 cm/seconds = 34 cm/ microsecond, divided by 16 because the prescalar of 1024 causes the timer to increment every 1/15625 of a second
-	//We're trying to get microseconds, so divide that 15625 by 1000, so the timer increments every 1/15.6 of a microsecond, which is close to 16, so divide by 16. For some unexplained reason, I had to divide by 2 to get calibration correct.
 	return (time*34/32);
 }
 
-//Send a ping and return distance
+///Send a ping and return distance
+/**
+* Sends a pules, set to low state, wait for done state (handled in the pulse and timer interrupt routines)
+* @return distance in centimeters
+*/
+
 unsigned ping_read()
 {
 	pulse(); // send the starting pulse to PING
@@ -264,7 +295,7 @@ unsigned ping_read()
 
 //IR Sensor
 
-//Initialize ADC for IR sensor
+///Initialize ADC for IR sensor
 void IR_init()
 {
 	// REFS=11, ADLAR=0, MUX don’t care
@@ -275,7 +306,16 @@ void IR_init()
 	ADCSRA = _BV(ADEN) | (7<<ADPS0);
 }
 
-//Linear interpolation - takes in two points and an x value, returns a y value along that line
+///Linear interpolation
+/**
+* Takes in two points and an x value, returns a y value along that line
+* @param x1 float representing the x value of point one on a line
+* @param x2 float representing the x value of point two on a line
+* @param y1 float representing the y value of point one on a line
+* @param y2 float representing the y value of point two on a line
+* @param x float representing the x value that the desired calculated y value is paired with
+* @return float representing the point on the line that the x input corresponds to
+*/
 float line(float x1, float x2, float y1, float y2, float x){
 	float y;
 	float slope = (y2-y1)/(x2-x1);
@@ -286,7 +326,12 @@ float line(float x1, float x2, float y1, float y2, float x){
 	
 }
 
-//Distance Calculation from ADC's measured value
+///Distance Calculation from ADC's measured value
+/**
+* Takes in the raw distance from the ADC's 10 bit value, does linear interpolation in five regions and returns the distance in centimeters
+* @param distance_val the raw distance value from the ADC 
+* @return distance in centimeters
+*/
 int distance_lookup(int distance_val){
 	int distance;
 	if (distance_val>710){
@@ -312,7 +357,12 @@ int distance_lookup(int distance_val){
 	
 };
 
-//Read ADC and return its scaled value
+///Read ADC and return its scaled value
+/**
+* Reads ADC
+* @param channel channel to use for the ADC
+* @return distance in centimeters
+*/
 unsigned ir_read(char channel)
 {
 	ADMUX |= (channel & 0x1F);
@@ -331,7 +381,7 @@ volatile int period = 43000; 	// Pulse frequency, Hz
 volatile int mode = 1;
 volatile int angle = 0;
 
-//Initialize servo
+///Initialize servo
 void servo_init( void )
 {
 	OCR3A = period-1; 		// number of cycles in the interval
@@ -342,37 +392,25 @@ void servo_init( void )
 	DDRE = 0xFF;			// set Port E pin 4 (OC3B) as output
 }
 
-//Set servo to degree angle
+///Set servo to degree angle
+/**
+* Moves servo to a degree angle
+* @param degree angle in degrees to set the servo to
+*/
 void move_servo(unsigned degree)
 {
 	OCR3B = servo_degree_calc(degree); // set pulse width
 	wait_ms(5);
 }
 
-//Calculate Servo degree value
+///Calculate Servo degree value
+/**
+* Takes in a degree value, and returns the PWM value required (Top value of the WGM)
+* @param degree desired angle value in degrees
+* @return WGM top value
+*/
 unsigned servo_degree_calc(unsigned degree){
 	return (degree * 19.7) + 800;
-}
-
-//Move servo by scaler degrees in whichever direction it currently is in
-void range_check_and_move(unsigned scaler){
-	
-	//Checks to see what the change in angle will be
-	int angle_moveby = ((mode==1)-(mode==0))*scaler;
-	
-	//Checks to make sure counter is within a good range
-	if((angle + angle_moveby<0) || (angle + angle_moveby)>180){
-		//If it isn't, switch modes and tell user that servo is out of range
-		lprintf("Out of Range!\nSwitching Modes");
-		mode = !mode;
-		wait_ms(800);
-	}
-	else{
-		//Change angle by scaler value and
-		angle += angle_moveby;
-		//If valid, move servo
-		move_servo(angle);
-	}
 }
 
 
@@ -380,7 +418,7 @@ void range_check_and_move(unsigned scaler){
 
 //Serial
 
-//Initialize USART0 to a given baud rate
+///Initialize USART0 to a given baud rate
 void serial_init(void) {
 	unsigned int baud = 34;// look up in table for correct value
 	/* Set baud rate */
@@ -395,7 +433,11 @@ void serial_init(void) {
 	//UCSR0B |= 0b10000000; // optional: receive interrupt enable bit
 }
 
-//Receive a character
+///Receive a character
+/**
+* Waits for the serial input register is full
+* @return char in serial register
+*/
 char serial_getc() {
 	/* Wait for the receive complete flag (RXC) */
 	while ((UCSR0A & 0b10000000) == 0)
@@ -404,7 +446,11 @@ char serial_getc() {
 	return UDR0;
 }
 
-//Send a character
+///Send a character
+/**
+* Sends a character over the serial port
+* @param data character to write to serial port
+*/
 void serial_putc(char data) {
 	/* Wait for empty transmit buffer by checking the UDRE bit */
 	while ((UCSR0A & 0b00100000) == 0);
@@ -412,7 +458,11 @@ void serial_putc(char data) {
 	UDR0 = data;
 }
 
-//Send a string
+///Send a string
+/**
+* Loops through a string and uses serial_putc to place each individual char on the serial send
+* @param data pointer to a string to send
+*/
 void serial_putstr(char data[]){
 	int len = strlen(data);
 	int i;
@@ -425,7 +475,12 @@ void serial_putstr(char data[]){
 
 //Movement
 
-//Moves forward by distance cm, 1 is forward. -1 is backwards
+///Moves forward by distance cm, 1 is forward. -1 is backwards
+/**
+* Sets wheels forward, constantly checks sensor data for errors
+* @param distance distance to move in centimeters
+* @return error value or complete acknowledge
+*/
 int forward(int distance) {
 	oi_t *sensor_data = oi_alloc();
 	oi_init(sensor_data);
@@ -497,7 +552,12 @@ int forward(int distance) {
 	return ret;
 }
 
-// Go backwards, ignoring all alerts
+/// Go backwards, ignoring all alerts
+/**
+* Sets wheels forward, constantly checks sensor data for errors
+* @param distance distance to move in centimeters
+* @return complete acknowledge
+*/
 int reverse(int distance) {
 	oi_t *sensor_data = oi_alloc();
 	oi_init(sensor_data);
@@ -520,8 +580,12 @@ int reverse(int distance) {
 }
 
 
-//degrees is simply degree of rotation desired
-//direction is 1 for clockwise, -1 for counterclockwise
+///Rotate for a specified amount
+/**
+* Sets wheels forward, constantly checks sensor data for errors
+* @param degrees degrees to move
+* @param direction 1 for clockwise, -1 for counterclockwise
+*/
 void rotate(int degrees,int direction) {
 	if(direction>0){
 		direction=1;
@@ -551,18 +615,18 @@ void rotate(int degrees,int direction) {
 }
 
 
-//Stop
+///Stop
 void stop(){
 	oi_set_wheels(0, 0);
 }
 
 
-//DO DONUTS
+///DO DONUTS
 void dodonuts(){
 	rotate(720,1);
 }
 
-//Initialize Everything
+///Initialize Everything
 void init_all(){
 	lcd_init();
 	servo_init();
@@ -575,8 +639,15 @@ void init_all(){
 }
 
 
-//Scan/Sonar function - Average size is the number of scans it performs each degree
-
+///Scan/Sonar function
+/**
+* Loops 0 to 180, setting the servo to that degree setting
+* then takes ave_num number of scans, on both ping and IR
+* Averages those reads, and writes them to the sensor_reading struct
+* After reading is done, munch through the sensor_reading, and detect objects
+* After objects have been detected from raw sensor data, format and send over serial
+* @param ave_size number of averages to take per degree
+*/
 void scan(int ave_size)
 {
 	move_servo(0);
@@ -682,6 +753,13 @@ void scan(int ave_size)
 	
 }
 
+///Scan/Sonar function
+/**
+* Loops 0 to 180, setting the servo to that degree setting
+* then takes one scan on just the IR and writes it to the sensor_reading struct
+* After reading is done, munch through the sensor_reading, and detect objects
+* After objects have been detected from raw sensor data, format and send over serial
+*/
 void scanfast()
 {
 	move_servo(0);
@@ -774,14 +852,14 @@ void scanfast()
 	
 }
 
-//Play music
+///Play music
 void playsong(char *notes, char *duration){
 	forward(0);
 	oi_load_song(0,26,notes,duration);
 	oi_play_song(0);
 }
 
-//Beep
+///Beep
 void beep(void){
 	oi_t* sensor = oi_alloc();
 	oi_init(sensor);
@@ -792,7 +870,7 @@ void beep(void){
 	oi_free(sensor);
 }
 
-//Play a sound on error
+///Play a sound on error
 void errorsound(void){
 	oi_t* sensor = oi_alloc();
 	oi_init(sensor);
