@@ -369,7 +369,7 @@ unsigned ir_read(char channel)
 	ADCSRA |= _BV(ADSC);
 	while (ADCSRA & _BV(ADSC))
 		{}
-	return distance_lookup(ADCW);
+	return distance_lookup(ADC);
 }
 
 
