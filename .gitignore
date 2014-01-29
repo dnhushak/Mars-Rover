@@ -7,6 +7,10 @@ Doxyfile
 ##############
 Output-Build.txt
 *.atsln
-errorcodes.txt
 Debug/*
+Debug
 *.cproj
+
+# Application Specifics #
+#########################
+pilot
