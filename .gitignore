@@ -1,0 +1,12 @@
+# Doxygen #
+###########
+html/*
+Doxyfile
+
+# AVR Studio #
+##############
+Output-Build.txt
+*.atsln
+errorcodes.txt
+Debug/*
+*.cproj
